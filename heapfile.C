@@ -16,22 +16,32 @@ const Status createHeapFile(const string fileName)
     status = db.openFile(fileName, file);
     if (status != OK)
     {
-		// file doesn't exist. First create it and allocate
-		// an empty header page and data page.
+		// file doesn't exist. First create it and allocate an empty header page and data page.
         status = db.createFile(fileName);
         if (status != OK) {
             return status;
         }
         // allocate an empty page by invoking bm->allocPage() appropriately. 
         status = bufMgr->allocPage(file, hdrPageNo, newPage); // allocPage(File* file, int& pageNo, Page*& page) 
+        if (status != OK) {
+            return status;
+        }
 
         // Take the Page* pointer returned from allocPage() and cast it to a FileHdrPage*. 
         hdrPage = (FileHdrPage*) newPage;
 
         // Using this pointer initialize the values in the header page. 
+        hdrPage->filename = fileName;
+        hdrPage->firstPage = hdrPageNo;
+        hdrPage->lastPage = hdrPageNo;
+        hdrPage->recCnt = 0;
+        hdrPage->pageCnt = 1;
 
         // Then make a second call to bm->allocPage(). This page will be the first data page of the file. 
         status = bufMgr->allocPage(file, newPageNo, newPage);
+        if (status != OK) {
+            return status;
+        }
 
         // Using the Page* pointer returned, invoke its init() method to initialize the page contents. 
         newPage->init(newPageNo);
@@ -64,7 +74,6 @@ HeapFile::HeapFile(const string & fileName, Status& returnStatus)
     if ((status = db.openFile(fileName, filePtr)) == OK)
     {
 		
-		// Opens the appropriate file by calling db->openFile() (do not forget to save the File* returned in the filePtr data member). 
         // Read and pin the header page for the file in the buffer pool, initializing the private data members headerPage, headerPageNo, and hdrDirtyFlag. 
         // You might be wondering how you get the page number of the header page. This is what file->getFirstPage() is used for (see description of the I/O layer)! 
         
@@ -132,14 +141,23 @@ const Status HeapFile::getRecord(const RID & rid, Record & rec)
     // cout<< "getRecord. record (" << rid.pageNo << "." << rid.slotNo << ")" << endl;
     // The private data members curPage and curPageNo should be used to keep track of the current data page pinned in the buffer pool. 
     // If the desired record is on the currently pinned page, simply invoke curPage->getRecord to get the record
-    // if() {
-    //     curPage->getRecord(rid, rec);
-    // } else {
+    status = curPage->getRecord(rid, rec);
+    if (status != OK) {
         // Unpin the currently pinned page (assuming a page is pinned) 
+    	status = bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
+        if (status != OK) {
+            return status;
+        }
 
         // Use the pageNo field of the RID to read the page into the buffer pool.
-        bufMgr->readPage(filePtr, rid.pageNo, curPage); // readPage(File* file, const int PageNo, Page*& page)
-    // }
+        status = bufMgr->readPage(filePtr, rid.pageNo, curPage); 
+        if (status != OK) {
+            return status;
+        }
+    }
+
+    return status
+
 }
 
 HeapFileScan::HeapFileScan(const string & name,
@@ -363,6 +381,7 @@ InsertFileScan::~InsertFileScan()
 }
 
 // Insert a record into the file
+// Returns the RID of the inserted record in outRid.
 // TODO
 const Status InsertFileScan::insertRecord(const Record & rec, RID& outRid)
 {
@@ -378,11 +397,9 @@ const Status InsertFileScan::insertRecord(const Record & rec, RID& outRid)
         return INVALIDRECLEN;
     }
 
-    // Inserts the record described by rec into the file 
+    // Inserts the record described by rec into the file
     
-    // Returns the RID of the inserted record in outRid.
-  
-  
+    return status;
 }
 
 
