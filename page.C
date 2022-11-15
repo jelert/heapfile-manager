@@ -97,7 +97,7 @@ const Status Page::insertRecord(const Record & rec, RID& rid)
 
 	tmpRid.pageNo = curPage;
 	tmpRid.slotNo = -i; // make a positive slot number
-	rid = tmpRid;s
+	rid = tmpRid;
 
 	return OK;
     }
