@@ -256,8 +256,16 @@ const Status HeapFileScan::resetScan()
     return OK;
 }
 
-// Returns (via the outRid parameter) the RID of the next record that satisfies the scan predicate. 
-// TODO
+/**
+ * Scans heap file for the next record that matches 
+ * the given predicate and hands back the RID.
+ * 
+ * @author       Michael Feist
+ * @param outRid Return parameter for RID
+ * @return       OK if successful,
+ *               FILEEOF if no record found,
+ *               Otherwise returns status of failing method
+*/
 const Status HeapFileScan::scanNext(RID& outRid)
 {
     Status status = OK;
