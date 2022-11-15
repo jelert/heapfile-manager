@@ -289,30 +289,62 @@ const Status HeapFileScan::resetScan()
     return OK;
 }
 
-// Returns (via the outRid parameter) the RID of the next record that satisfies the scan predicate. 
-// TODO
+/**
+ * Scans heap file for the next record that matches 
+ * the given predicate and hands back the RID.
+ * 
+ * @author       Michael Feist
+ * @param outRid Return parameter for RID
+ * @return       OK if successful,
+ *               FILEEOF if no record found,
+ *               Otherwise returns status of failing method
+*/
 const Status HeapFileScan::scanNext(RID& outRid)
 {
-    Status 	status = OK;
-    RID		nextRid;
-    RID		tmpRid;
-    int 	nextPageNo;
-    Record      rec;
+    Status status = OK;
+    Record rec;
+    int nextPageNo;
 
+    // Loop over pages
+    while(true) {
 
-    // Scan the file one page at a time. 
+        status = curPage->firstRecord(curRec);
+        if(status != OK) goto END;
+
+        // Loop over records
+        while(true) {
+
+            // Check record
+            status = getRecord(rec);
+            if(status != OK) goto END;
+            if(matchRec(rec)) {
+                outRid = curRec;
+                goto END;
+            }
+
+            // Move to next record
+            status = curPage->nextRecord(curRec, curRec);
+            if(status == ENDOFPAGE) break;
+        }
+
+        // Move to next page
+        status = bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
+        if(status != OK) goto END;
+
+        status = curPage->getNextPage(nextPageNo);
+        if(status != OK) goto END;
+        if(nextPageNo == -1) {
+            status = FILEEOF;
+            goto END;
+        }
+        curPageNo = nextPageNo;
+
+        status = bufMgr->readPage(filePtr, curPageNo, curPage);
+        if(status != OK) goto END;
+    }
     
-    // For each page, use the firstRecord() and nextRecord() methods of the Page class to get the rids of all the records on the page. 
-    // Convert the rid to a pointer to the record data and invoke matchRec() to determine if record satisfies the filter associated with the scan. 
-    // If so, store the rid in curRec and return curRec. 
-    
-    // To make things fast, keep the current page pinned until all the records on the page have been processed. 
-    
-    // Then continue with the next page in the file. 
-    
-    // Since the HeapFileScan class is derived from the HeapFile class it also has all the methods of the HeapFile class as well. 
-    
-    // Returns OK if no errors occurred. Otherwise, return the error code of the first error that occurred.
+    END:
+    markScan();
     return status;
 	
 }
