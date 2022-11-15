@@ -2,7 +2,7 @@
 #include "error.h"
 
 // routine to create a heapfile
-// TODO
+// TODO - JOE
 const Status createHeapFile(const string fileName)
 {
     File* 		file;
@@ -32,10 +32,14 @@ const Status createHeapFile(const string fileName)
 
         // Using this pointer initialize the values in the header page. 
         hdrPage->filename = fileName;
-        hdrPage->firstPage = hdrPageNo;
-        hdrPage->lastPage = hdrPageNo;
         hdrPage->recCnt = 0;
         hdrPage->pageCnt = 1;
+
+        // Unpin page and mark as dirty.
+        status = bufMgr->unPinPage(file, hdrPageNo, true);
+        if (status != OK) {
+            return status;
+        }
 
         // Then make a second call to bm->allocPage(). This page will be the first data page of the file. 
         status = bufMgr->allocPage(file, newPageNo, newPage);
@@ -50,7 +54,13 @@ const Status createHeapFile(const string fileName)
         hdrPage->firstPage = newPageNo;
         hdrPage->lastPage = newPageNo;
 
-        // Unpin both pages and mark them as dirty.
+        // Unpin page and mark as dirty.
+        status = bufMgr->unPinPage(file, newPageNo, true);
+        if (status != OK) {
+            return status;
+        }
+
+        return OK;
     }
     return (FILEEXISTS);
 }
@@ -62,7 +72,7 @@ const Status destroyHeapFile(const string fileName)
 }
 
 // constructor opens the underlying file
-// TODO
+// TODO - DEREK
 HeapFile::HeapFile(const string & fileName, Status& returnStatus)
 {
     Status 	status;
@@ -133,7 +143,7 @@ const int HeapFile::getRecCnt() const
 // if record is not on the currently pinned page, the current page
 // is unpinned and the required page is read into the buffer pool
 // and pinned.  returns a pointer to the record via the rec parameter
-// TODO
+// TODO - JOE
 const Status HeapFile::getRecord(const RID & rid, Record & rec)
 {
     Status status;
