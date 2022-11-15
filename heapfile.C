@@ -85,6 +85,9 @@ HeapFile::HeapFile(const string & fileName, Status& returnStatus)
     // open the file and read in the header page and the first data page
     if ((status = db.openFile(fileName, filePtr)) == OK)
     {
+        //get the page number for the headerPage
+        status = filePtr->getFirstPage(headerPageNum);
+        if(status != OK){
             returnStatus = status;
             return;
         }
@@ -106,6 +109,7 @@ HeapFile::HeapFile(const string & fileName, Status& returnStatus)
 
         //Read and pin the first page of the file into the buffer pool
         status = bufMgr->readPage(filePtr, firstPageNum, pagePtr);
+        if(status != OK){
             returnStatus = status;
             return;
         }
@@ -421,7 +425,6 @@ InsertFileScan::~InsertFileScan()
 
 // Insert a record into the file
 // Returns the RID of the inserted record in outRid.
-// TODO
 // TODO: DEREK CALAMARI
 const Status InsertFileScan::insertRecord(const Record & rec, RID& outRid)
 {
