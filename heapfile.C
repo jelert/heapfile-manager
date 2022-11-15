@@ -260,13 +260,11 @@ const Status HeapFileScan::resetScan()
 // TODO
 const Status HeapFileScan::scanNext(RID& outRid)
 {
-    Status 	status = OK;
-    RID		nextRid;
-    RID		tmpRid;
-    int 	nextPageNo;
-    Record      rec;
+    while(true) {
 
 
+        curPage = 
+    }
     // Scan the file one page at a time. 
     
     // For each page, use the firstRecord() and nextRecord() methods of the Page class to get the rids of all the records on the page. 
@@ -280,7 +278,7 @@ const Status HeapFileScan::scanNext(RID& outRid)
     // Since the HeapFileScan class is derived from the HeapFile class it also has all the methods of the HeapFile class as well. 
     
     // Returns OK if no errors occurred. Otherwise, return the error code of the first error that occurred.
-    return status;
+    return OK;
 	
 }
 
