@@ -30,8 +30,9 @@ const Status createHeapFile(const string fileName)
         // Take the Page* pointer returned from allocPage() and cast it to a FileHdrPage*. 
         hdrPage = (FileHdrPage*) newPage;
 
-        // Using this pointer initialize the values in the header page. 
-        hdrPage->fileName = fileName;
+        // Using this pointer initialize the values in the header page.
+        fileName.copy(hdrPage->fileName,MAXNAMESIZE);
+        hdrPage->fileName[MAXNAMESIZE-1] = '\0';
         hdrPage->recCnt = 0;
         hdrPage->pageCnt = 1;
 
