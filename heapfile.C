@@ -31,7 +31,7 @@ const Status createHeapFile(const string fileName)
         hdrPage = (FileHdrPage*) newPage;
 
         // Using this pointer initialize the values in the header page. 
-        hdrPage->filename = fileName;
+        hdrPage->fileName = fileName;
         hdrPage->recCnt = 0;
         hdrPage->pageCnt = 1;
 
