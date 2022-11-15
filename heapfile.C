@@ -72,24 +72,53 @@ const Status destroyHeapFile(const string fileName)
 }
 
 // constructor opens the underlying file
-// TODO - DEREK
+// TODO: DEREK CALAMARI
 HeapFile::HeapFile(const string & fileName, Status& returnStatus)
 {
     Status 	status;
     Page*	pagePtr;
+    int headerPageNum;
+    int firstPageNum;
 
     cout << "opening file " << fileName << endl;
 
     // open the file and read in the header page and the first data page
     if ((status = db.openFile(fileName, filePtr)) == OK)
     {
-		
-        // Read and pin the header page for the file in the buffer pool, initializing the private data members headerPage, headerPageNo, and hdrDirtyFlag. 
-        // You might be wondering how you get the page number of the header page. This is what file->getFirstPage() is used for (see description of the I/O layer)! 
+            returnStatus = status;
+            return;
+        }
+        //read and pin header page for the file in the buffer pool
+        status = bufMgr->readPage(filePtr, headerPageNum, pagePtr);
+        if(status != OK){
+            returnStatus = status;
+            return;
+        }
+
+        //initialize private data members: headerPage, headerPageNo, hdrDirtyFlag
+        strcpy(headerPage->fileName, fileName.c_str());
+        headerPage = (FileHdrPage*)pagePtr;
+        headerPageNo = headerPageNum;
+        hdrDirtyFlag = false;
         
-        // Read and pin the first page of the file into the buffer pool, initializing the values of curPage, curPageNo, and curDirtyFlag appropriately. 
+        // get the page number for the first page (which is nextPage from headerPage)
+        pagePtr->getNextPage(firstPageNum);
+
+        //Read and pin the first page of the file into the buffer pool
+        status = bufMgr->readPage(filePtr, firstPageNum, pagePtr);
+            returnStatus = status;
+            return;
+        }
+
+        // initializing the values of curPage, curPageNo, and curDirtyFlag appropriately
+        curPage = pagePtr;
+        curPageNo = firstPageNum;
+        curDirtyFlag = false;
+
+
         // Set curRec to NULLRID.
         curRec = NULLRID;
+        return;
 		
     }
     else
@@ -166,7 +195,7 @@ const Status HeapFile::getRecord(const RID & rid, Record & rec)
         }
     }
 
-    return status
+    return status;
 
 }
 
@@ -393,6 +422,7 @@ InsertFileScan::~InsertFileScan()
 // Insert a record into the file
 // Returns the RID of the inserted record in outRid.
 // TODO
+// TODO: DEREK CALAMARI
 const Status InsertFileScan::insertRecord(const Record & rec, RID& outRid)
 {
     Page*	newPage;
@@ -407,8 +437,49 @@ const Status InsertFileScan::insertRecord(const Record & rec, RID& outRid)
         return INVALIDRECLEN;
     }
 
-    // Inserts the record described by rec into the file
-    
+    // try to insert the record described by rec into curPage of file
+    status = curPage->insertRecord(rec, rid);
+
+    if (status != OK) {
+        // No space to insert record on current page 
+
+        // Unpin the currently pinned page (assuming a page is pinned) 
+    	unpinstatus = bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
+        if (unpinstatus != OK) {
+            return unpinstatus;
+        }
+
+        //get next page Number
+        status = curPage->getNextPage(newPageNo);
+        if(status != OK){
+            return status;
+        }
+
+        // read next page into buffer pool
+        status = bufMgr->readPage(filePtr, newPageNo, newPage); 
+        if (status != OK) {
+            return status;
+        }
+
+        // insert record into new page
+        newPage->insertRecord(rec, rid);
+        if(status != OK){
+            return status;
+        }
+
+        //update curPage to be newPage in buffer Pool
+        curPage = newPage;
+    }
+
+    // record count incremented
+    headerPage->recCnt++;
+    // inserted record to curpage --> dirty
+    curDirtyFlag = true;
+
+    // rid of inserted record into outRid
+    outRid = rid;
+
+    //return 
     return status;
 }
 
