@@ -285,7 +285,8 @@ const Status HeapFileScan::scanNext(RID& outRid)
             status = getRecord(rec);
             if(status != OK) goto END;
             if(matchRec(rec)) {
-                goto FOUND;
+                outRid = curRec;
+                goto END;
             }
 
             // Move to next record
@@ -308,9 +309,6 @@ const Status HeapFileScan::scanNext(RID& outRid)
         status = bufMgr->readPage(filePtr, curPageNo, curPage);
         if(status != OK) goto END;
     }
-
-    FOUND:
-    outRid = curRec;
     
     END:
     markScan();
