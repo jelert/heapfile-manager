@@ -260,25 +260,53 @@ const Status HeapFileScan::resetScan()
 // TODO
 const Status HeapFileScan::scanNext(RID& outRid)
 {
+    Status status = OK;
+    Record rec;
+    int nextPageNo;
+
+    // Loop over pages
     while(true) {
 
+        status = curPage->firstRecord(curRec);
+        if(status != OK) goto END;
 
-        curPage = 
+        // Loop over records
+        while(true) {
+
+            // Check record
+            status = getRecord(rec);
+            if(status != OK) goto END;
+            if(matchRec(rec)) {
+                goto FOUND;
+            }
+
+            // Move to next record
+            status = curPage->nextRecord(curRec, curRec);
+            if(status == ENDOFPAGE) break;
+        }
+
+        // Move to next page
+        status = bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
+        if(status != OK) goto END;
+
+        status = curPage->getNextPage(nextPageNo);
+        if(status != OK) goto END;
+        if(nextPageNo == -1) {
+            status = FILEEOF;
+            goto END;
+        }
+        curPageNo = nextPageNo;
+
+        status = bufMgr->readPage(filePtr, curPageNo, curPage);
+        if(status != OK) goto END;
     }
-    // Scan the file one page at a time. 
+
+    FOUND:
+    outRid = curRec;
     
-    // For each page, use the firstRecord() and nextRecord() methods of the Page class to get the rids of all the records on the page. 
-    // Convert the rid to a pointer to the record data and invoke matchRec() to determine if record satisfies the filter associated with the scan. 
-    // If so, store the rid in curRec and return curRec. 
-    
-    // To make things fast, keep the current page pinned until all the records on the page have been processed. 
-    
-    // Then continue with the next page in the file. 
-    
-    // Since the HeapFileScan class is derived from the HeapFile class it also has all the methods of the HeapFile class as well. 
-    
-    // Returns OK if no errors occurred. Otherwise, return the error code of the first error that occurred.
-    return OK;
+    END:
+    markScan();
+    return status;
 	
 }
 
