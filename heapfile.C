@@ -1,7 +1,22 @@
+//----------------------------------------
+// Group 9 Project 5
+// 1. Joe Elert - 9081168636
+// 2. Derek Calamari - 9081197635
+// 3. Michael Feist - 9082159105
+//----------------------------------------
+
 #include "heapfile.h"
 #include "error.h"
 
-// routine to create a heapfile
+/**
+ * Creates a HeapFile with the given name.
+ * 
+ * @author       Joe Elert
+ * @param fileName Name of the file to create.
+ * @return       OK if successful,
+ *               FILEEXISTS if heapfile already exists,
+ *               Otherwise returns status of failing method
+*/
 // TODO - JOE
 const Status createHeapFile(const string fileName)
 {
@@ -21,6 +36,7 @@ const Status createHeapFile(const string fileName)
         if (status != OK) {
             return status;
         }
+
         // allocate an empty page by invoking bm->allocPage() appropriately. 
         status = db.openFile(fileName, file);
         if (status != OK) {
@@ -36,16 +52,9 @@ const Status createHeapFile(const string fileName)
         hdrPage = (FileHdrPage*) newPage;
 
         // Using this pointer initialize the values in the header page.
-        fileName.copy(hdrPage->fileName,MAXNAMESIZE);
-        hdrPage->fileName[MAXNAMESIZE-1] = '\0';
+        strncpy(hdrPage->fileName, fileName.c_str(), MAXNAMESIZE);
         hdrPage->recCnt = 0;
         hdrPage->pageCnt = 1;
-
-        // Unpin page and mark as dirty.
-        status = bufMgr->unPinPage(file, hdrPageNo, true);
-        if (status != OK) {
-            return status;
-        }
 
         // Then make a second call to bm->allocPage(). This page will be the first data page of the file. 
         status = bufMgr->allocPage(file, newPageNo, newPage);
@@ -61,6 +70,11 @@ const Status createHeapFile(const string fileName)
         hdrPage->lastPage = newPageNo;
 
         // Unpin page and mark as dirty.
+        status = bufMgr->unPinPage(file, hdrPageNo, true);
+        if (status != OK) {
+            return status;
+        }
+
         status = bufMgr->unPinPage(file, newPageNo, true);
         if (status != OK) {
             return status;
@@ -112,8 +126,7 @@ HeapFile::HeapFile(const string & fileName, Status& returnStatus)
         hdrDirtyFlag = false;
         
         // get the page number for the first page (which is nextPage from headerPage)
-        pagePtr->getNextPage(firstPageNum);
-        cout << "BREAKS HERE  " << firstPageNum << endl;
+        firstPageNum = headerPage->firstPage;
         //Read and pin the first page of the file into the buffer pool
         status = bufMgr->readPage(filePtr, firstPageNum, pagePtr);
         if(status != OK){
@@ -129,6 +142,8 @@ HeapFile::HeapFile(const string & fileName, Status& returnStatus)
 
         // Set curRec to NULLRID.
         curRec = NULLRID;
+
+        returnStatus = OK;
         return;
 		
     }
@@ -179,10 +194,18 @@ const int HeapFile::getRecCnt() const
   return headerPage->recCnt;
 }
 
-// retrieve an arbitrary record from a file.
-// if record is not on the currently pinned page, the current page
-// is unpinned and the required page is read into the buffer pool
-// and pinned.  returns a pointer to the record via the rec parameter
+/**
+ * Retrieve an arbitrary record from a file.
+ * If record is not on the currently pinned page, the current page
+ * is unpinned and the required page is read into the buffer pool
+ * and pinned.  Returns a pointer to the record via the rec parameter.
+ * 
+ * @author       Joe Elert
+ * @param rid    rid of record to retrieve
+ * @param rec    reference to pointer to record
+ * @return       OK if successful,
+ *               Otherwise returns status of failing method
+*/
 // TODO - JOE
 const Status HeapFile::getRecord(const RID & rid, Record & rec)
 {
@@ -306,6 +329,7 @@ const Status HeapFileScan::resetScan()
  *               FILEEOF if no record found,
  *               Otherwise returns status of failing method
 */
+// TODO - Michael
 const Status HeapFileScan::scanNext(RID& outRid)
 {
     Status status = OK;
