@@ -337,51 +337,57 @@ const Status HeapFileScan::resetScan()
 // TODO - Michael
 const Status HeapFileScan::scanNext(RID& outRid)
 {
-    Status status = OK;
-    Record rec;
-    int nextPageNo;
+    Status 	status = OK;
+    RID		nextRid;
+    RID		tmpRid;
+    int 	nextPageNo;
+    Record      rec;
 
-    // Loop over pages
+    // Scan the file one page at a time. 
     while(true) {
+        status = curPage->firstRecord(tmpRid);
+        if(status != OK){
+            return status;
+        }
 
-        status = curPage->firstRecord(curRec);
-        if(status != OK) goto END;
-
-        // Loop over records
         while(true) {
 
-            // Check record
-            status = getRecord(rec);
-            if(status != OK) goto END;
-            if(matchRec(rec)) {
-                outRid = curRec;
-                goto END;
+            status = curPage->getRecord(tmpRid, rec);
+            if(status != OK){
+                return status;
             }
 
-            // Move to next record
-            status = curPage->nextRecord(curRec, curRec);
-            if(status == ENDOFPAGE) break;
+            // Invoke matchRec() to determine if record satisfies the filter associated with the scan
+            if(matchRec(rec)) {
+                // If so, store the rid in curRec and return curRec via outRid. 
+                curRec = outRid = tmpRid;
+                return OK;
+            }
+
+            status = curPage->nextRecord(tmpRid, nextRid);
+            if (status == ENDOFPAGE) {
+                break;
+            } else if (status != OK){
+                return status;
+            }       
         }
 
-        // Move to next page
         status = bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
-        if(status != OK) goto END;
+        if (status != OK) {
+            return status;
+        }
 
         status = curPage->getNextPage(nextPageNo);
-        if(status != OK) goto END;
-        if(nextPageNo == -1) {
-            status = FILEEOF;
-            goto END;
+        if(status != OK){
+            return status;
         }
-        curPageNo = nextPageNo;
 
+        curPageNo = nextPageNo;
         status = bufMgr->readPage(filePtr, curPageNo, curPage);
-        if(status != OK) goto END;
+        if (status != OK) {
+            return status;
+        }
     }
-    
-    END:
-    markScan();
-    return status;
 	
 }
 
