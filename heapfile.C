@@ -91,8 +91,15 @@ const Status destroyHeapFile(const string fileName)
 	return (db.destroyFile (fileName));
 }
 
-// constructor opens the underlying file
-// TODO: DEREK CALAMARI
+/**
+ * Heapfile Constructor method
+ * 
+ * @author       Derek Calamari
+ * @param fileName Name of the file to open.
+ * @param returnStatus Status of the method.
+ * @return       void
+*/
+// TODO - DEREK
 HeapFile::HeapFile(const string & fileName, Status& returnStatus)
 {
     Status 	status;
@@ -486,9 +493,17 @@ InsertFileScan::~InsertFileScan()
     }
 }
 
-// Insert a record into the file
-// Returns the RID of the inserted record in outRid.
-// TODO: DEREK CALAMARI
+/**
+ * Insert a record into the file
+ * 
+ * @author       Derek Calamari
+ * @param rec reference to the record to insert
+ * @param outRid rid of the reference inserted
+ * @return       OK if successful,
+ *               INVALIDRECLEN if rec is too long,
+ *               Otherwise returns status of failing method
+*/
+// TODO - DEREK
 const Status InsertFileScan::insertRecord(const Record & rec, RID& outRid)
 {
     Page*	newPage;
