@@ -22,7 +22,12 @@ const Status createHeapFile(const string fileName)
             return status;
         }
         // allocate an empty page by invoking bm->allocPage() appropriately. 
-        status = bufMgr->allocPage(file, hdrPageNo, newPage); // allocPage(File* file, int& pageNo, Page*& page) 
+        status = db.openFile(fileName, file);
+        if (status != OK) {
+            return status;
+        }
+
+        status = bufMgr->allocPage(file, hdrPageNo, newPage); // allocPage(File* file, int& pageNo, Page*& page) ERROR
         if (status != OK) {
             return status;
         }
