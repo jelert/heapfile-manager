@@ -37,13 +37,13 @@ const Status createHeapFile(const string fileName)
             return status;
         }
 
-        // allocate an empty page by invoking bm->allocPage() appropriately. 
         status = db.openFile(fileName, file);
         if (status != OK) {
             return status;
         }
 
-        status = bufMgr->allocPage(file, hdrPageNo, newPage); // allocPage(File* file, int& pageNo, Page*& page) ERROR
+        // allocate an empty page by invoking bm->allocPage() appropriately. 
+        status = bufMgr->allocPage(file, hdrPageNo, newPage);
         if (status != OK) {
             return status;
         }
@@ -107,8 +107,6 @@ HeapFile::HeapFile(const string & fileName, Status& returnStatus)
     int headerPageNum;
     int firstPageNum;
 
-    cout << "opening file " << fileName << endl;
-
     // open the file and read in the header page and the first data page
     if ((status = db.openFile(fileName, filePtr)) == OK)
     {
@@ -118,6 +116,7 @@ HeapFile::HeapFile(const string & fileName, Status& returnStatus)
             returnStatus = status;
             return;
         }
+
         //read and pin header page for the file in the buffer pool
         status = bufMgr->readPage(filePtr, headerPageNum, pagePtr);
         if(status != OK){
@@ -145,7 +144,6 @@ HeapFile::HeapFile(const string & fileName, Status& returnStatus)
         curPage = pagePtr;
         curPageNo = firstPageNum;
         curDirtyFlag = false;
-
 
         // Set curRec to NULLRID.
         curRec = NULLRID;
@@ -530,14 +528,17 @@ const Status InsertFileScan::insertRecord(const Record & rec, RID& outRid)
             return unpinstatus;
         }
 
-        //get next page Number
-        status = curPage->getNextPage(newPageNo);
-        if(status != OK){
+        newPageNo = curPageNo++;
+        status = bufMgr->allocPage(filePtr, newPageNo, newPage);
+        if (status != OK) {
             return status;
         }
 
-        // read next page into buffer pool
-        status = bufMgr->readPage(filePtr, newPageNo, newPage); 
+        newPage->init(newPageNo);
+
+        headerPage->lastPage = newPageNo;
+        headerPage->pageCnt++;
+        status = newPage->setNextPage(-1);
         if (status != OK) {
             return status;
         }
@@ -550,10 +551,12 @@ const Status InsertFileScan::insertRecord(const Record & rec, RID& outRid)
 
         //update curPage to be newPage in buffer Pool
         curPage = newPage;
+        curPageNo = newPageNo;
     }
 
     // record count incremented
     headerPage->recCnt++;
+
     // inserted record to curpage --> dirty
     curDirtyFlag = true;
 
