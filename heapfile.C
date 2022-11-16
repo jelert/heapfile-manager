@@ -105,14 +105,15 @@ HeapFile::HeapFile(const string & fileName, Status& returnStatus)
         }
 
         //initialize private data members: headerPage, headerPageNo, hdrDirtyFlag
-        strcpy(headerPage->fileName, fileName.c_str());
+        //fileName.copy(headerPage->fileName,MAXNAMESIZE);
+        //headerPage->fileName[MAXNAMESIZE-1] = '\0';
         headerPage = (FileHdrPage*)pagePtr;
         headerPageNo = headerPageNum;
         hdrDirtyFlag = false;
         
         // get the page number for the first page (which is nextPage from headerPage)
         pagePtr->getNextPage(firstPageNum);
-
+        cout << "BREAKS HERE  " << firstPageNum << endl;
         //Read and pin the first page of the file into the buffer pool
         status = bufMgr->readPage(filePtr, firstPageNum, pagePtr);
         if(status != OK){
