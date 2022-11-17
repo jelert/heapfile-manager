@@ -395,9 +395,7 @@ const Status HeapFileScan::scanNext(RID& outRid)
             status = curPage->nextRecord(curRec, nextRid);
             if(status == ENDOFPAGE) {
                 break;
-            } else if (status != OK) {
-                return status;
-            }
+            } 
 
             curRec = nextRid;
         }
