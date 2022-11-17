@@ -372,7 +372,9 @@ const Status HeapFileScan::scanNext(RID& outRid)
         // Loop over records
         while(true) {
             // Make sure record isn't last found
-
+            if(curRec.slotNo == markedRec.slotNo) {
+                goto NEXTRECORD;
+            }
 
             // Get Record
             status = curPage->getRecord(curRec, rec);
