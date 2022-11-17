@@ -362,31 +362,38 @@ const Status HeapFileScan::scanNext(RID& outRid)
         return FILEEOF;
     }
 
+    // Move to first record on page
+    status = curPage->firstRecord(curRec);
+    if(status != OK) return status;
+
     // Loop over pages
     while(true) {
 
         // Loop over records
         while(true) {
+            // Make sure record isn't last found
+
 
             // Get Record
             status = curPage->getRecord(curRec, rec);
-            if(status != OK) return status;
+            if(status != OK) goto END;
 
             // See if it matches
             if(matchRec(rec)){
 
                 outRid = curRec;
 
-                // If it matches move to next record before leaving
-                status = curPage->nextRecord(curRec, curRec);
-                if(status == ENDOFPAGE) {
-                    status = nextPage();
-                    if(status != OK) return status;
-                }
+                // // If it matches move to next record before leaving
+                // status = curPage->nextRecord(curRec, curRec);
+                // if(status == ENDOFPAGE) {
+                //     status = nextPage();
+                //     if(status != OK) goto END;
+                // }
 
-                return OK;
+                goto END;
             }
 
+            NEXTRECORD:
             // Move to next record
             status = curPage->nextRecord(curRec, curRec);
             if(status == ENDOFPAGE) break;
@@ -395,9 +402,11 @@ const Status HeapFileScan::scanNext(RID& outRid)
 
         // Move to next page
         status = nextPage();
-        if(status != OK) return status;
+        if(status != OK) goto END;
     }
 
+    END:
+    markScan();
     return status;
 	
 }
