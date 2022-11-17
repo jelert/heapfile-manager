@@ -353,11 +353,10 @@ const Status HeapFileScan::resetScan()
  *               FILEEOF if no more records available,
  *               Otherwise returns status of failing method
 */
-// TODO - Michael
 const Status HeapFileScan::scanNext(RID& outRid)
 {
-    Status 	status = OK;
-    Record      rec;
+    Status status = OK;
+    Record rec;
 
     // Check for EOF
     if(curPageNo == -1) {
@@ -372,7 +371,7 @@ const Status HeapFileScan::scanNext(RID& outRid)
 
             // Move to next record
             status = curPage->nextRecord(curRec, curRec);
-            if(status == ENDOFPAGE) break;
+            if(status == ENDOFPAGE) break; // Get next page
 
             // Get Record
             status = curPage->getRecord(curRec, rec);
@@ -380,9 +379,7 @@ const Status HeapFileScan::scanNext(RID& outRid)
 
             // See if it matches
             if(matchRec(rec)){
-
                 outRid = curRec;
-
                 goto END;
             }
 
@@ -394,7 +391,6 @@ const Status HeapFileScan::scanNext(RID& outRid)
     }
 
     END:
-    markScan();
     return status;
 	
 }
