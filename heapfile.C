@@ -355,8 +355,8 @@ const Status HeapFileScan::resetScan()
 const Status HeapFileScan::scanNext(RID& outRid)
 {
     Status 	status = OK;
-    RID		nextRid;
-    int 	nextPageNo;
+    //RID		nextRid;
+    //int 	nextPageNo;
     Record      rec;
 
     // // If we don't have a page pinned, we need to get one
