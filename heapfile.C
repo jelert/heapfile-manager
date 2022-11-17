@@ -386,7 +386,7 @@ const Status HeapFileScan::scanNext(RID& outRid)
             }
 
             // See if it matches
-            if(matchRec(rec) == OK){
+            if(matchRec(rec)){
                 outRid = curRec;
                 return OK;
             }
