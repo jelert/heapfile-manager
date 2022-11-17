@@ -355,19 +355,7 @@ const Status HeapFileScan::resetScan()
 const Status HeapFileScan::scanNext(RID& outRid)
 {
     Status 	status = OK;
-    //RID		nextRid;
-    //int 	nextPageNo;
     Record      rec;
-
-    // // If we don't have a page pinned, we need to get one
-    // if(curPage == NULL){
-    //     curPageNo = headerPage->firstPage;
-    //     status = bufMgr->readPage(filePtr, curPageNo, curPage);
-    //     if(status != OK){
-    //         return status;
-    //     }
-    //     curDirtyFlag = false;
-    // } 
 
     // Loop over pages
     while(true) {
@@ -375,15 +363,22 @@ const Status HeapFileScan::scanNext(RID& outRid)
         // Loop over records
         while(true) {
 
-            // get Record
+            // Get Record
             status = curPage->getRecord(curRec, rec);
             if(status != OK) return status;
 
             // See if it matches
             if(matchRec(rec)){
+
                 outRid = curRec;
+
+                // If it matches move to next record before leaving
                 status = curPage->nextRecord(curRec, curRec);
-                if(status == ENDOFPAGE) nextPage();
+                if(status == ENDOFPAGE) {
+                    status = nextPage();
+                    if(status != OK && status != FILEEOF) return status;
+                }
+                
                 return OK;
             }
 
