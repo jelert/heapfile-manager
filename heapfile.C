@@ -356,7 +356,6 @@ const Status HeapFileScan::scanNext(RID& outRid)
 {
     Status 	status = OK;
     RID		nextRid;
-    RID		tmpRid;
     int 	nextPageNo;
     Record      rec;
 
@@ -368,21 +367,20 @@ const Status HeapFileScan::scanNext(RID& outRid)
             return status;
         }
         curDirtyFlag = false;
-        status = curPage->firstRecord(tmpRid);
-        if(status != OK){
-            return status;
-        }
-        curRec = tmpRid;
-        
     } 
+
+    status = curPage->firstRecord(curRec);
+    if(status != OK){
+        return status;
+    }
 
     // Loop over pages
     while(true) {
 
         // Loop over records
         while(true) {
-            // get Record from tmpRID
-            status = curPage->getRecord(tmpRid, rec);
+            // get Record
+            status = curPage->getRecord(curRec, rec);
             if(status != OK){
                 return status;
             }
@@ -394,14 +392,14 @@ const Status HeapFileScan::scanNext(RID& outRid)
             }
 
             // Move to next record
-            status = curPage->nextRecord(tmpRid, nextRid);
+            status = curPage->nextRecord(curRec, nextRid);
             if(status == ENDOFPAGE) {
                 break;
             } else if (status != OK) {
                 return status;
             }
 
-            tmpRid = nextRid;
+            curRec = nextRid;
         }
 
         // Move to next page
