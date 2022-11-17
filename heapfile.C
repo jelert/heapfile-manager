@@ -371,8 +371,9 @@ const Status HeapFileScan::scanNext(RID& outRid)
 
         // Loop over records
         while(true) {
+            
             // Make sure record isn't last found
-            if(curRec.slotNo == markedRec.slotNo) {
+            if(curRec.slotNo == markedRec.slotNo && curRec.pageNo == markedRec.pageNo) {
                 goto NEXTRECORD;
             }
 
