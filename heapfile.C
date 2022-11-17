@@ -357,6 +357,11 @@ const Status HeapFileScan::scanNext(RID& outRid)
     Status 	status = OK;
     Record      rec;
 
+    // Check for EOF
+    if(curPageNo == -1) {
+        return FILEEOF;
+    }
+
     // Loop over pages
     while(true) {
 
@@ -376,7 +381,7 @@ const Status HeapFileScan::scanNext(RID& outRid)
                 status = curPage->nextRecord(curRec, curRec);
                 if(status == ENDOFPAGE) {
                     status = nextPage();
-                    if(status != OK) return status;
+                    if(status != OK && status != FILEEOF) return status;
                 }
 
                 return OK;
