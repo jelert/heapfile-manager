@@ -107,6 +107,8 @@ private:
     RID   markedRec;         // rid of last record returned
 
     const bool matchRec(const Record & rec) const;
+    const Status nextPage();
+    const Status checkRecord(RID rid, RID & outRid);
 };
 
 

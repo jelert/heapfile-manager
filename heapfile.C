@@ -359,72 +359,68 @@ const Status HeapFileScan::scanNext(RID& outRid)
     int 	nextPageNo;
     Record      rec;
 
-    // If we don't have a page pinned, we need to get one
-    if(curPage == NULL){
-        curPageNo = headerPage->firstPage;
-        status = bufMgr->readPage(filePtr, curPageNo, curPage);
-        if(status != OK){
-            return status;
-        }
-        curDirtyFlag = false;
-    } 
-
-    status = curPage->firstRecord(curRec);
-    if(status != OK){
-        return status;
-    }
+    // // If we don't have a page pinned, we need to get one
+    // if(curPage == NULL){
+    //     curPageNo = headerPage->firstPage;
+    //     status = bufMgr->readPage(filePtr, curPageNo, curPage);
+    //     if(status != OK){
+    //         return status;
+    //     }
+    //     curDirtyFlag = false;
+    // } 
 
     // Loop over pages
     while(true) {
 
         // Loop over records
         while(true) {
+
             // get Record
             status = curPage->getRecord(curRec, rec);
-            if(status != OK){
-                return status;
-            }
+            if(status != OK) return status;
 
             // See if it matches
             if(matchRec(rec)){
                 outRid = curRec;
+                status = curPage->nextRecord(curRec, curRec);
+                if(status == ENDOFPAGE) nextPage();
                 return OK;
             }
 
             // Move to next record
-            status = curPage->nextRecord(curRec, nextRid);
-            if(status == ENDOFPAGE) {
-                break;
-            } 
+            status = curPage->nextRecord(curRec, curRec);
+            if(status == ENDOFPAGE) break;
 
-            curRec = nextRid;
         }
 
         // Move to next page
-        status = bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
-        if(status != OK) {
-            return status;
-        }
-
-        status = curPage->getNextPage(nextPageNo);
-        if(status != OK) {
-            return status;
-        }
-
-        if(nextPageNo == -1) {
-            return FILEEOF;
-        }
-
-        curPageNo = nextPageNo;
-
-        status = bufMgr->readPage(filePtr, curPageNo, curPage);
-        if(status != OK) {
-            return status;
-        }
+        status = nextPage();
+        if(status != OK) return status;
     }
 
     return status;
 	
+}
+
+const Status HeapFileScan::nextPage() 
+{
+    Status status;
+
+    status = bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
+    if(status != OK) return status;
+
+    status = curPage->getNextPage(curPageNo);
+    if(status != OK) return status;
+
+    if(curPageNo == -1) return FILEEOF;
+
+    status = bufMgr->readPage(filePtr, curPageNo, curPage);
+    if(status != OK) return status;
+
+    status = curPage->firstRecord(curRec);
+    if(status != OK) return status;
+
+    return OK;
 }
 
 
