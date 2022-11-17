@@ -156,7 +156,7 @@ int main(int argc, char **argv)
     scan1->endScan();
     delete scan1;
     scan1 = NULL;
-    exit(1);
+    
 	// scan the file sequentially checking that each record was stored properly
     cout << endl << "scan file dummy.02 " << endl;
     scan1 = new HeapFileScan("dummy.02", status);
