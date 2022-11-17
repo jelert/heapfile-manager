@@ -347,8 +347,8 @@ const Status HeapFileScan::resetScan()
  * 
  * @author       Michael Feist
  * @param outRid Return parameter for RID
- * @return       OK if successful,
- *               FILEEOF if no record found,
+ * @return       OK if more records after found,
+ *               FILEEOF if no more records available,
  *               Otherwise returns status of failing method
 */
 // TODO - Michael
@@ -376,9 +376,9 @@ const Status HeapFileScan::scanNext(RID& outRid)
                 status = curPage->nextRecord(curRec, curRec);
                 if(status == ENDOFPAGE) {
                     status = nextPage();
-                    if(status != OK && status != FILEEOF) return status;
+                    if(status != OK) return status;
                 }
-                
+
                 return OK;
             }
 
