@@ -259,6 +259,8 @@ HeapFileScan::HeapFileScan(const string & name,
 			   Status & status) : HeapFile(name, status)
 {
     filter = NULL;
+    markedRec.pageNo = -1;
+    markedRec.slotNo = -1;
 }
 
 const Status HeapFileScan::startScan(const int offset_,
