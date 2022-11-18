@@ -179,8 +179,8 @@ HeapFile::~HeapFile()
     status = bufMgr->unPinPage(filePtr, headerPageNo, hdrDirtyFlag);
     if (status != OK) cerr << "error in unpin of header page\n";
 	
-	// status = bufMgr->flushFile(filePtr);  // make sure all pages of the file are flushed to disk
-	// if (status != OK) cerr << "error in flushFile call\n";
+	status = bufMgr->flushFile(filePtr);  // make sure all pages of the file are flushed to disk
+	if (status != OK) cerr << "error in flushFile call\n";
 	// before close the file
 	status = db.closeFile(filePtr);
     if (status != OK)
@@ -387,7 +387,7 @@ const Status HeapFileScan::scanNext(RID& outRid)
 
         // Move to next page
         status = nextPage();
-        if(status != OK) goto END;
+        if(status != OK && status != NORECORDS) goto END;
     }
 
     END:
