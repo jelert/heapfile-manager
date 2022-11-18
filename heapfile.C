@@ -397,6 +397,7 @@ const Status HeapFileScan::scanNext(RID& outRid)
 
 const Status HeapFileScan::nextPage() 
 {
+    TOP:
     Status status;
 
     status = bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
@@ -411,7 +412,7 @@ const Status HeapFileScan::nextPage()
     if(status != OK) return status;
 
     status = curPage->firstRecord(curRec);
-    if(status != OK) return status;
+    if(status == NORECORDS) goto TOP;
 
     curRec.slotNo = -1;
 
