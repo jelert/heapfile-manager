@@ -439,6 +439,10 @@ const Status HeapFileScan::deleteRecord()
     // reduce count of number of records in the file
     headerPage->recCnt--;
     hdrDirtyFlag = true; 
+
+    status = curPage->nextRecord(curRec, curRec);
+    if(status == ENDOFPAGE) nextPage(); // Get next page
+
     return status;
 }
 
