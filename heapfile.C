@@ -387,7 +387,7 @@ const Status HeapFileScan::scanNext(RID& outRid)
 
         // Move to next page
         status = nextPage();
-        if(status != OK && status != NORECORDS) goto END;
+        if(status != OK) goto END;
     }
 
     END:
