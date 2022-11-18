@@ -79,6 +79,9 @@ const Status createHeapFile(const string fileName)
             return status;
         }
 
+        // Close file
+        db.closeFile(file);
+
         return OK;
     }
     return (FILEEXISTS);
@@ -215,11 +218,13 @@ const Status HeapFile::getRecord(const RID & rid, Record & rec)
 {
     Status status;
 
+    curRec.pageNo = rid.pageNo;
+    curRec.slotNo = rid.slotNo;
+
     // cout<< "getRecord. record (" << rid.pageNo << "." << rid.slotNo << ")" << endl;
 
     // Case 1, page and record match, we can call curPage->getRecord
     if (curPage != NULL && curPageNo == rid.pageNo) {
-        status = curPage->getRecord(rid, rec);
         if (status != OK) {
             return status;
         }
@@ -363,6 +368,15 @@ const Status HeapFileScan::scanNext(RID& outRid)
         return FILEEOF;
     }
 
+    // Check null
+    if(curPage == NULL) {
+        status = bufMgr->readPage(filePtr, headerPage->firstPage, curPage);
+        if(status != OK) goto END;
+        curPageNo = headerPage->firstPage;
+        curRec = NULLRID;
+        curDirtyFlag = false;
+    }
+
     // Loop over pages
     while(true) {
 
@@ -415,6 +429,7 @@ const Status HeapFileScan::nextPage()
     if(status == NORECORDS) goto TOP;
 
     curRec.slotNo = -1;
+    curDirtyFlag = false;
 
     return OK;
 }
@@ -598,6 +613,8 @@ const Status InsertFileScan::insertRecord(const Record & rec, RID& outRid)
         //update curPage to be newPage in buffer Pool
         curPage = newPage;
         curPageNo = newPageNo;
+        curRec.pageNo = curPageNo;
+        curRec.slotNo = -1;
     }
 
     // record count incremented
