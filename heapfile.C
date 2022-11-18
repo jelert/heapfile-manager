@@ -87,7 +87,7 @@ const Status createHeapFile(const string fileName)
 // routine to destroy a heapfile
 const Status destroyHeapFile(const string fileName)
 {
-	return (db.destroyFile (fileName));
+	return (db.destroyFile(fileName));
 }
 
 /**
