@@ -225,6 +225,7 @@ const Status HeapFile::getRecord(const RID & rid, Record & rec)
 
     // Case 1, page and record match, we can call curPage->getRecord
     if (curPage != NULL && curPageNo == rid.pageNo) {
+        status = curPage->getRecord(rid, rec);
         if (status != OK) {
             return status;
         }
