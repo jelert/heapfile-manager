@@ -180,8 +180,7 @@ HeapFile::~HeapFile()
     if (status != OK) cerr << "error in unpin of header page\n";
 	
 	status = bufMgr->flushFile(filePtr);  // make sure all pages of the file are flushed to disk
-	//if (status != OK) cerr << "error in flushFile call\n";
-    if (status != OK) cerr << status << endl;
+	if (status != OK) cerr << "error in flushFile call\n";
 	// before close the file
 	status = db.closeFile(filePtr);
     if (status != OK)
