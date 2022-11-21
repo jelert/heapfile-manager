@@ -50,6 +50,14 @@ int main(int argc, char **argv)
     status = destroyHeapFile("dummy.02");
     // ignore the error return
 
+    // destroy any old copies of "dummy.03"
+    status = destroyHeapFile("dummy.03");
+    // ignore the error return
+
+    // destroy any old copies of "dummy.03"
+    status = destroyHeapFile("dummy.04");
+    // ignore the error return
+
     status = createHeapFile("dummy.02");
     if (status != OK) 
     {
